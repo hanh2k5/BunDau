@@ -1,0 +1,105 @@
+name: CI — Bún Đậu Quán
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Backend Tests ──────────────────────────────────────────
+  backend:
+    name: Backend (Laravel)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: bun_dau_quan_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, bcmath
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: Configure test database
+        run: |
+          sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=bun_dau_quan_test/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=password/' .env
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: Run tests
+        run: php artisan test
+
+  # ── Frontend Build ─────────────────────────────────────────
+  frontend:
+    name: Frontend (VueJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  # ── Deploy (optional — on main branch only) ────────────────
+  deploy:
+    name: Deploy to Render
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "RENDER_DEPLOY_HOOK is not set. Skipping deployment."
+            exit 0
+          fi
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          echo "✅ Deploy hook triggered successfully!"

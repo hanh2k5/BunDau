@@ -1,0 +1,243 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ============================================================
+   Bún Đậu — Apple-Inspired Design System
+   Pure CSS, không dùng @apply để tránh lỗi Tailwind
+   ============================================================ */
+
+/* ── Tailwind v4 Custom Theme ── */
+@theme {
+  /* Primary = Apple Blue #0071e3 */
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #3b9ef7;
+  --color-primary-500: #0071e3;
+  --color-primary-600: #0071e3;
+  --color-primary-700: #0062c4;
+  --color-primary-800: #0054a8;
+  --color-primary-900: #00448a;
+
+  /* Surface */
+  --color-surface: #fbfbfd;
+
+  /* Font */
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Outfit', system-ui, sans-serif;
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Outfit', system-ui, sans-serif;
+  background-color: #fbfbfd;
+  color: #1d1d1f;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Outfit', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+
+/* ── Apple Card ── */
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  transform: translateY(-2px);
+}
+
+/* ── Apple Stat Card ── */
+.stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: box-shadow 0.25s ease;
+}
+.stat-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+
+/* ── .glass backward-compat alias (Apple-style card) ── */
+.glass {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+}
+
+/* ── Apple Navbar ── */
+.apple-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Apple Sidebar ── */
+.apple-sidebar {
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ── Nav Item ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1d1d1f;
+  text-decoration: none;
+  transition: background 0.15s ease;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+.nav-item:hover { background: rgba(0,0,0,0.04); }
+.nav-item-active {
+  background: rgba(0, 113, 227, 0.08) !important;
+  color: #0071e3 !important;
+  font-weight: 500;
+}
+
+/* ── Apple Button (filled) ── */
+.btn-apple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #0071e3;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  padding: 9px 20px;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-apple:hover { background: #0077ed; }
+.btn-apple:active { transform: scale(0.97); background: #006edb; }
+.btn-apple:disabled { background: #c7c7cc; cursor: not-allowed; }
+
+/* ── Apple Button (outline) ── */
+.btn-apple-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: #0071e3;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  padding: 8px 18px;
+  border-radius: 980px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-apple-outline:hover {
+  border-color: rgba(0,0,0,0.25);
+  background: rgba(0,0,0,0.02);
+}
+
+/* ── Apple Secondary Button ── */
+.btn-apple-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.05);
+  color: #1d1d1f;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+.btn-apple-secondary:hover { background: rgba(0,0,0,0.08); }
+
+/* ── Apple Input ── */
+.input-apple {
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1d1d1f;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-apple:focus {
+  border-color: #0071e3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+.input-apple::placeholder { color: #86868b; }
+
+/* ── Apple Badge ── */
+.badge-apple {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 980px;
+  white-space: nowrap;
+}
+
+/* ── Page transitions ── */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.page-enter-from { opacity: 0; transform: translateY(8px); }
+.page-leave-to   { opacity: 0; transform: translateY(-8px); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Selection ── */
+::selection { background: rgba(0, 113, 227, 0.2); }
