@@ -116,40 +116,46 @@ function setPresetRange(type) {
     <div v-else class="space-y-6">
       <!-- Stats: Apple style -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="stat-card">
-          <p class="text-[11px] font-medium mb-3" style="color: #86868b; letter-spacing: 0.02em; text-transform: uppercase;">Hôm nay</p>
-          <p class="font-semibold mb-2" style="font-size: 22px; color: #1d1d1f; letter-spacing: -0.03em;">
+        <button 
+          @click="setPresetRange('today')"
+          class="stat-card group text-left transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl hover:shadow-primary-500/10 border-transparent hover:border-primary-100"
+        >
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 group-hover:text-primary-500 transition-colors">Hôm nay</p>
+          <p class="font-black text-2xl text-slate-900 tracking-tight mb-2">
             {{ formatCurrency(todayData?.total_revenue || 0) }}
           </p>
           <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full" style="background: #30d158;"></span>
-            <span class="text-[11px] font-medium" style="color: #30d158;">{{ todayData?.total_orders || 0 }} đơn</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[11px] font-bold text-emerald-600">{{ todayData?.total_orders || 0 }} đơn thành công</span>
           </div>
-        </div>
+        </button>
 
         <div class="stat-card">
-          <p class="text-[11px] font-medium mb-3" style="color: #86868b; letter-spacing: 0.02em; text-transform: uppercase;">Tổng thu</p>
-          <p class="font-semibold mb-2" style="font-size: 22px; color: #1d1d1f; letter-spacing: -0.03em;">
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Tổng thu</p>
+          <p class="font-black text-2xl text-slate-900 tracking-tight mb-2">
             {{ formatCurrency(summary?.all_time?.total_revenue || 0) }}
           </p>
-          <p class="text-[11px]" style="color: #86868b;">{{ summary?.all_time?.total_orders || 0 }} đơn từ trước đến nay</p>
+          <p class="text-[11px] font-bold text-slate-500">{{ summary?.all_time?.total_orders || 0 }} đơn từ trước đến nay</p>
         </div>
 
         <div class="stat-card">
-          <p class="text-[11px] font-medium mb-3" style="color: #86868b; letter-spacing: 0.02em; text-transform: uppercase;">Trung bình</p>
-          <p class="font-semibold mb-2" style="font-size: 22px; color: #1d1d1f; letter-spacing: -0.03em;">
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Trung bình</p>
+          <p class="font-black text-2xl text-slate-900 tracking-tight mb-2">
             {{ formatCurrency(summary?.all_time?.average_per_order || 0) }}
           </p>
-          <p class="text-[11px]" style="color: #86868b;">Mỗi đơn hàng</p>
+          <p class="text-[11px] font-bold text-slate-500">Mỗi đơn hàng thành công</p>
         </div>
 
-        <div class="stat-card">
-          <p class="text-[11px] font-medium mb-3" style="color: #86868b; letter-spacing: 0.02em; text-transform: uppercase;">Đang chờ</p>
-          <p class="font-semibold mb-2" style="font-size: 32px; color: #ff9f0a; letter-spacing: -0.03em;">
+        <button 
+          @click="router.push({ name: 'orders', query: { status: 'pending' } })"
+          class="stat-card group text-left transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl hover:shadow-orange-500/10 border-transparent hover:border-orange-100"
+        >
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 group-hover:text-orange-500 transition-colors">Đang chờ</p>
+          <p class="font-black text-3xl text-orange-500 tracking-tight mb-2">
             {{ summary?.pending_orders || 0 }}
           </p>
-          <p class="text-[11px]" style="color: #86868b;">Chưa hoàn thành</p>
-        </div>
+          <p class="text-[11px] font-bold text-slate-500">Đơn hàng chưa hoàn thành</p>
+        </button>
       </div>
 
       <!-- Date range filter -->

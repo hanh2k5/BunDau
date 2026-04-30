@@ -62,51 +62,83 @@ const menuItems = computed(() => {
 
   <!-- Sidebar panel -->
   <aside
-    class="fixed top-0 left-0 bottom-0 z-50 flex flex-col w-[260px] bg-white/95 backdrop-blur-2xl border-r border-slate-200/60 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+    class="fixed top-0 left-0 bottom-0 z-50 flex flex-col w-[260px] bg-white border-r border-slate-200/60 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
     :class="isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'"
   >
     <!-- Logo -->
-    <div class="flex items-center gap-3 px-6 h-[60px] border-b border-slate-100 shrink-0">
-      <div class="w-8 h-8 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-sm shadow-primary-500/20">
+    <div class="flex items-center gap-3 px-7 h-[70px] border-b border-slate-100 shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white shadow-lg shadow-primary-500/30">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
       </div>
-      <span class="text-lg font-bold text-slate-800 tracking-tight">Bún Đậu</span>
+      <div class="flex flex-col">
+        <span class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Bún Đậu A Lử</span>
+        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Hương vị gia truyền</span>
+      </div>
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+    <nav class="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
+      <div class="px-3 mb-2">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Danh mục</p>
+      </div>
+
       <router-link
         v-for="item in menuItems"
         :key="item.name"
         :to="{ name: item.name }"
         @click="$emit('close')"
-        class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+        class="flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative overflow-hidden"
         :class="route.name === item.name 
-          ? 'bg-primary-50 text-primary-600 shadow-sm shadow-primary-500/10' 
-          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          ? 'bg-primary-50 text-primary-600 shadow-sm shadow-primary-500/5' 
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'"
       >
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Active indicator -->
+        <div 
+          v-if="route.name === item.name" 
+          class="absolute left-0 top-3 bottom-3 w-1 bg-primary-600 rounded-r-full"
+        ></div>
+
+        <svg 
+          class="w-5 h-5 shrink-0 transition-transform group-hover:scale-110" 
+          :class="route.name === item.name ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.svgPath" />
         </svg>
         <span class="flex-1">{{ item.label }}</span>
+        
         <span
           v-if="item.badge && cart.totalItems > 0"
-          class="bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+          class="bg-primary-600 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-lg shadow-primary-500/30 animate-bounce"
         >{{ cart.totalItems }}</span>
+
+        <!-- Chevron for non-active -->
+        <svg 
+          v-if="route.name !== item.name"
+          class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" 
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
       </router-link>
     </nav>
 
     <!-- User -->
-    <div v-if="auth.isLoggedIn" class="p-4 border-t border-slate-100 shrink-0">
-      <div class="flex items-center gap-3 px-2 py-2">
-        <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm shrink-0">
-          {{ auth.user?.name?.charAt(0)?.toUpperCase() }}
+    <div v-if="auth.isLoggedIn" class="p-5 border-t border-slate-100 shrink-0">
+      <div class="flex items-center gap-3 p-3 bg-slate-50/50 rounded-[1.5rem] border border-slate-100/50 shadow-inner group hover:bg-white hover:shadow-md transition-all duration-500 cursor-default">
+        <div class="relative">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 flex items-center justify-center font-black text-sm shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+            {{ auth.user?.name?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-bold text-slate-800 truncate">{{ auth.user?.name }}</p>
-          <p class="text-xs font-medium text-slate-500 capitalize">{{ auth.user?.role }}</p>
+          <p class="text-xs font-black text-slate-800 truncate tracking-tight">{{ auth.user?.name }}</p>
+          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+            {{ auth.user?.role === 'admin' ? 'Quản lý' : 'Nhân sự' }}
+          </p>
         </div>
       </div>
     </div>

@@ -71,6 +71,16 @@ export const useCartStore = defineStore('cart', {
       this.items = []
     },
 
+    setItems(items) {
+      this.items = items.map(item => ({
+        product_id: item.product_id,
+        name: item.product_name,
+        price: item.price,
+        image_url: item.product_image_url,
+        quantity: item.quantity
+      }))
+    },
+
     /**
      * Format items for API submission.
      */

@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, watch, ref } from 'vue'
 import AppButton from '@/components/common/AppButton.vue'
+import { categories } from '@/utils/categories'
 
 const props = defineProps({
   product: {
@@ -146,17 +147,37 @@ function handleSubmit() {
 
         <!-- Category -->
         <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1.5">Phân loại *</label>
-          <select
-            v-model="form.category"
-            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm font-medium cursor-pointer"
-          >
-            <option value="bun-dau">🍱 Bún đậu</option>
-            <option value="bun-cha">🍜 Bún chả</option>
-            <option value="combo">🍱 Combo</option>
-            <option value="drink">🥤 Đồ uống</option>
-            <option value="other">✨ Khác</option>
-          </select>
+          <label class="block text-sm font-bold text-slate-700 mb-3">Phân loại *</label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <label 
+              v-for="cat in categories" 
+              :key="cat.id"
+              class="relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer group hover:border-primary-200"
+              :class="form.category === cat.id 
+                ? 'border-primary-500 bg-primary-50/50 ring-4 ring-primary-500/10' 
+                : 'border-slate-100 bg-white hover:bg-slate-50'"
+            >
+              <input 
+                type="radio" 
+                v-model="form.category" 
+                :value="cat.id" 
+                class="sr-only"
+              />
+              <span class="text-xl mb-1 group-hover:scale-110 transition-transform">{{ cat.icon }}</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-center" :class="form.category === cat.id ? 'text-primary-700' : 'text-slate-500'">
+                {{ cat.label }}
+              </span>
+              
+              <!-- Checkmark for selected -->
+              <div v-if="form.category === cat.id" class="absolute top-1.5 right-1.5">
+                <div class="w-3.5 h-3.5 bg-primary-500 rounded-full flex items-center justify-center shadow-sm">
+                  <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            </label>
+          </div>
         </div>
 
         <!-- Description -->

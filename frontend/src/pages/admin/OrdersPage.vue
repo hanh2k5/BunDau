@@ -1,7 +1,9 @@
 <script setup>
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, computed, watch } from 'vue'
 import { useOrdersStore } from '@/stores/orders.store'
+import { useCartStore } from '@/stores/cart.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { useNotificationStore } from '@/stores/notification.store'
 import { removeAccents, formatCurrency, formatDate, getStatusLabel, getStatusColor } from '@/utils/format'
 import OrderCard from '@/components/orders/OrderCard.vue'
@@ -12,6 +14,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import AppDateInput from '@/components/common/AppDateInput.vue'
 
 const route = useRoute()
+const router = useRouter()
 const ordersStore = useOrdersStore()
 const notification = useNotificationStore()
 
@@ -85,6 +88,7 @@ async function handlePay(order) {
     payingId.value = null
   }
 }
+
 
 async function handleCancel(order) {
   if (!confirm('Bạn chắc chắn muốn hủy đơn hàng này?')) return
@@ -167,7 +171,7 @@ async function handleCancel(order) {
           @input="handleSearch"
           type="text"
           class="input-apple !pl-11 !bg-slate-50/50 !border-none"
-          placeholder="Tìm đơn theo mã (ID), tên nhân viên, ghi chú..."
+          placeholder="Tìm theo tên nhân viên, ghi chú..."
         />
       </div>
     </div>
@@ -219,32 +223,42 @@ async function handleCancel(order) {
     >
       <div v-if="selectedOrder" class="space-y-6 pt-2">
         <!-- Info Grid -->
-        <div class="grid grid-cols-2 gap-y-5 gap-x-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-inner">
-          <div>
-            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Mã đơn hàng</p>
-            <p class="font-black text-slate-900 text-xl tracking-tight">#{{ selectedOrder.id }}</p>
+        <!-- Info Container -->
+        <div class="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-inner space-y-6">
+          <!-- Row 1: ID & Status -->
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Mã đơn hàng</p>
+              <p class="font-black text-slate-900 text-xl tracking-tight">#{{ selectedOrder.id }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Trạng thái</p>
+              <span 
+                class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm whitespace-nowrap inline-block"
+                :class="getStatusColor(selectedOrder.status)"
+              >
+                {{ getStatusLabel(selectedOrder.status) }}
+              </span>
+            </div>
           </div>
-          <div class="text-right">
-            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Trạng thái</p>
-            <span 
-              class="px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm"
-              :class="getStatusColor(selectedOrder.status)"
-            >
-              {{ getStatusLabel(selectedOrder.status) }}
-            </span>
-          </div>
-          <div>
-            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1.5">Nhân viên trực</p>
-            <p class="font-bold text-slate-800 text-sm flex items-center gap-2">
-               <span class="w-7 h-7 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-[11px] font-black shadow-sm">
-                 {{ selectedOrder.created_by?.name?.charAt(0).toUpperCase() || 'S' }}
-               </span>
-               {{ selectedOrder.created_by?.name || 'Hệ thống' }}
-            </p>
-          </div>
-          <div class="text-right">
-            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1.5">Thời điểm đặt</p>
-            <p class="font-bold text-slate-700 text-sm tracking-tight">{{ formatDate(selectedOrder.created_at) }}</p>
+
+          <div class="border-t border-slate-100"></div>
+
+          <!-- Row 2: Staff & Time -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1.5">Nhân viên trực</p>
+              <p class="font-bold text-slate-800 text-sm flex items-center gap-2 whitespace-nowrap">
+                <span class="w-7 h-7 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-[11px] font-black shadow-sm shrink-0">
+                  {{ selectedOrder.created_by?.name?.charAt(0).toUpperCase() || 'S' }}
+                </span>
+                <span class="truncate">{{ selectedOrder.created_by?.name || 'Hệ thống' }}</span>
+              </p>
+            </div>
+            <div class="sm:text-right">
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1.5">Thời điểm đặt</p>
+              <p class="font-bold text-slate-700 text-sm tracking-tight whitespace-nowrap">{{ formatDate(selectedOrder.created_at) }}</p>
+            </div>
           </div>
         </div>
 
@@ -271,15 +285,24 @@ async function handleCancel(order) {
                 </div>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-bold text-slate-900 text-[15px] leading-tight truncate">{{ item.product_name || 'Sản phẩm' }}</p>
-                <div class="flex items-center gap-2.5 mt-1">
-                  <span class="text-[11px] font-black text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md">{{ formatCurrency(item.price) }}</span>
-                  <span class="text-[11px] text-slate-400 font-bold">x{{ item.quantity }}</span>
+                <!-- Row 1: Full Name -->
+                <p class="font-black text-slate-900 text-[14px] leading-tight mb-2 uppercase tracking-tight">
+                  {{ item.product_name || 'Sản phẩm' }}
+                </p>
+                
+                <!-- Row 2: Price Details -->
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100">
+                      {{ formatCurrency(item.price) }}
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-bold">x{{ item.quantity }}</span>
+                  </div>
+                  <p class="font-black text-slate-900 text-[14px] tracking-tight whitespace-nowrap">
+                    {{ formatCurrency(item.subtotal || item.price * item.quantity) }}
+                  </p>
                 </div>
               </div>
-              <p class="font-black text-slate-900 text-[15px] tracking-tight">
-                {{ formatCurrency(item.subtotal || item.price * item.quantity) }}
-              </p>
             </div>
           </div>
         </div>
@@ -291,23 +314,22 @@ async function handleCancel(order) {
             <p class="text-slate-700 text-xs font-bold leading-relaxed">"{{ selectedOrder.note }}"</p>
           </div>
 
-          <div class="flex items-center justify-between p-6 bg-gradient-to-br from-primary-600 to-primary-700 rounded-[2rem] shadow-2xl shadow-primary-500/30 relative overflow-hidden group">
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 blur-3xl rounded-full group-hover:scale-125 transition-transform duration-700"></div>
-            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 blur-3xl rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+          <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl shadow-lg shadow-primary-500/20 relative overflow-hidden group">
+            <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             
-            <div class="relative z-10">
-              <span class="font-black text-white/70 text-[10px] uppercase tracking-[0.2em]">Tổng thanh toán</span>
-              <div class="flex items-baseline gap-1 mt-0.5">
-                <span class="text-3xl font-black text-white tracking-tighter">{{ formatCurrency(selectedOrder.total) }}</span>
-              </div>
+            <div class="relative z-10 flex items-center gap-3">
+              <span class="font-black text-white/60 text-[8px] uppercase tracking-widest hidden sm:inline">Tổng thanh toán</span>
+              <span class="text-xl font-black text-white tracking-tighter whitespace-nowrap">{{ formatCurrency(selectedOrder.total) }}</span>
             </div>
             
-            <button 
-              @click="selectedOrder = null" 
-              class="relative z-10 bg-white/20 hover:bg-white/30 backdrop-blur-md px-5 py-2.5 rounded-2xl text-white text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
-            >
-              Đóng
-            </button>
+            <div class="relative z-10 flex items-center justify-end w-full">
+              <button 
+                @click="selectedOrder = null" 
+                class="bg-white/20 hover:bg-white text-white hover:text-primary-600 px-6 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 border border-white/30 shadow-sm"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       </div>

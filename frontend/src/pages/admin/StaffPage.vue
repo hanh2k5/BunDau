@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { usersApi } from '@/api/users.api'
 import { useNotificationStore } from '@/stores/notification.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -11,6 +11,12 @@ const notification = useNotificationStore()
 
 const loading = ref(true)
 const users = ref([])
+
+// Search & Pagination state
+const searchQuery = ref('')
+const roleFilter = ref('all')
+const currentPage = ref(1)
+const itemsPerPage = ref(8)
 
 const isModalOpen = ref(false)
 const modalMode = ref('create') // 'create' | 'edit'
@@ -38,6 +44,40 @@ async function fetchUsers() {
   } finally {
     loading.value = false
   }
+}
+
+// Computed: Filter by search query & role
+const filteredUsers = computed(() => {
+  let result = users.value
+
+  // Role filter
+  if (roleFilter.value !== 'all') {
+    result = result.filter(u => u.role === roleFilter.value)
+  }
+
+  // Search filter
+  if (searchQuery.value) {
+    const lowerQuery = searchQuery.value.toLowerCase()
+    result = result.filter(u => {
+      const name = u.name?.toLowerCase() || ''
+      const email = u.email?.toLowerCase() || ''
+      return name.includes(lowerQuery) || email.includes(lowerQuery)
+    })
+  }
+
+  return result
+})
+
+// Computed: Pagination logic
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / itemsPerPage.value) || 1)
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredUsers.value.slice(start, start + itemsPerPage.value)
+})
+
+function handleFilterChange() {
+  currentPage.value = 1
 }
 
 function openCreateModal() {
@@ -133,9 +173,44 @@ async function handleDelete(user) {
       </button>
     </div>
 
+    <!-- Filters & Search -->
+    <div class="card p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4">
+      <div class="relative flex-1 w-full">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+        <input
+          v-model="searchQuery"
+          @input="handleFilterChange"
+          type="text"
+          class="input-apple !pl-11 !bg-slate-50/50"
+          placeholder="Tìm theo tên hoặc email..."
+        />
+      </div>
+
+      <select
+        v-model="roleFilter"
+        @change="handleFilterChange"
+        class="input-apple !w-full sm:!w-auto min-w-[180px] !py-2.5 !text-sm"
+      >
+        <option value="all">Tất cả chức vụ</option>
+        <option value="admin">Quản lý (Admin)</option>
+        <option value="staff">Nhân viên (Staff)</option>
+      </select>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-20">
       <AppLoading size="lg" />
+    </div>
+
+    <div v-else-if="filteredUsers.length === 0">
+      <AppEmpty 
+        message="Không tìm thấy nhân sự nào" 
+        description="Hãy thử đổi từ khóa tìm kiếm hoặc chọn bộ lọc khác"
+      />
     </div>
 
     <!-- Content -->
@@ -146,15 +221,15 @@ async function handleDelete(user) {
           <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50/50 text-[11px] uppercase font-bold text-slate-400 border-b border-slate-100">
               <tr>
-                <th class="px-6 py-4" style="white-space: nowrap;">Nhân viên</th>
-                <th class="px-6 py-4" style="white-space: nowrap;">Tài khoản (Email)</th>
-                <th class="px-6 py-4" style="white-space: nowrap;">Chức vụ</th>
-                <th class="px-6 py-4 text-center" style="white-space: nowrap;">Thao tác</th>
+                <th class="px-6 py-4">Nhân viên</th>
+                <th class="px-6 py-4">Tài khoản (Email)</th>
+                <th class="px-6 py-4">Chức vụ</th>
+                <th class="px-6 py-4 text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="user in users" :key="user.id" class="hover:bg-slate-50/50 transition-colors group">
-                <td class="px-6 py-4" style="white-space: nowrap;">
+              <tr v-for="user in paginatedUsers" :key="user.id" class="hover:bg-slate-50/50 transition-colors group">
+                <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-black text-sm shrink-0 shadow-sm border border-primary-200/50">
                       {{ user.name.charAt(0).toUpperCase() }}
@@ -165,11 +240,10 @@ async function handleDelete(user) {
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 font-medium text-slate-500" style="white-space: nowrap;">{{ user.email }}</td>
-                <td class="px-6 py-4" style="white-space: nowrap;">
+                <td class="px-6 py-4 font-medium text-slate-500">{{ user.email }}</td>
+                <td class="px-6 py-4">
                   <span 
                     class="inline-block px-3 py-1 text-[11px] font-black uppercase tracking-wider rounded-lg shadow-sm border"
-                    style="white-space: nowrap;"
                     :class="user.role === 'admin' 
                       ? 'bg-purple-50 text-purple-600 border-purple-100' 
                       : 'bg-blue-50 text-blue-600 border-blue-100'"
@@ -177,21 +251,26 @@ async function handleDelete(user) {
                     {{ user.role === 'admin' ? 'Quản lý' : 'Nhân viên' }}
                   </span>
                 </td>
-                <td class="px-6 py-4 text-center" style="white-space: nowrap;">
+                <td class="px-6 py-4 text-center">
                   <div class="flex items-center justify-center gap-2">
                     <button 
                       @click="openEditModal(user)"
-                      class="px-3 py-1.5 text-[13px] font-bold text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                      class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                      title="Sửa"
                     >
-                      Sửa
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
                     </button>
                     <button 
-                      @click="user.id !== auth.user.id && handleDelete(user)"
-                      class="px-3 py-1.5 text-[13px] font-bold rounded-xl transition-all"
-                      :class="user.id === auth.user.id ? 'invisible' : 'text-slate-500 hover:text-red-600 hover:bg-red-50'"
-                      :disabled="user.id === auth.user.id"
+                      v-if="user.id !== auth.user.id"
+                      @click="handleDelete(user)"
+                      class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                      title="Xóa"
                     >
-                      Xóa
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                     </button>
                   </div>
                 </td>
@@ -203,7 +282,7 @@ async function handleDelete(user) {
 
       <!-- Mobile: Card List -->
       <div class="grid grid-cols-1 gap-4 md:hidden">
-        <div v-for="user in users" :key="user.id" class="card p-4 space-y-4 border-l-4" :class="user.role === 'admin' ? 'border-purple-500' : 'border-blue-500'">
+        <div v-for="user in paginatedUsers" :key="user.id" class="card p-4 space-y-4 border-l-4" :class="user.role === 'admin' ? 'border-purple-500' : 'border-blue-500'">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-black text-base shadow-inner border border-slate-200">
@@ -223,23 +302,37 @@ async function handleDelete(user) {
           </div>
           
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-            <span v-if="user.id === auth.user.id" class="text-[11px] font-black text-green-600 uppercase tracking-[0.2em] bg-green-50 px-2 py-1 rounded-lg">Tài khoản của bạn</span>
+            <span v-if="user.id === auth.user.id" class="text-[11px] font-black text-green-600 uppercase tracking-[0.2em] bg-green-50 px-2 py-1 rounded-lg">Bạn</span>
             <span v-else class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">ID: #{{ user.id }}</span>
             
             <div class="flex items-center gap-2">
-              <button @click="openEditModal(user)" class="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-50 rounded-xl active:bg-slate-100 transition-colors">
-                Chỉnh sửa
+              <button @click="openEditModal(user)" class="p-2 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
               </button>
               <button 
                 v-if="user.id !== auth.user.id"
                 @click="handleDelete(user)" 
-                class="px-4 py-2 text-sm font-bold text-red-500 bg-red-50 rounded-xl active:bg-red-100 transition-colors"
+                class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
               >
-                Xóa
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex justify-center pt-4">
+        <AppPagination
+          v-model:currentPage="currentPage"
+          :total-pages="totalPages"
+          :total-items="filteredUsers.length"
+          :items-per-page="itemsPerPage"
+        />
       </div>
     </div>
 
@@ -257,7 +350,7 @@ async function handleDelete(user) {
             v-model="form.name" 
             type="text" 
             class="input-apple !bg-slate-50/50" 
-            placeholder="VD: Nguyễn Văn A"
+            placeholder="tên người dùng"
           />
         </div>
 
@@ -268,7 +361,7 @@ async function handleDelete(user) {
             v-model="form.email" 
             type="email" 
             class="input-apple !bg-slate-50/50" 
-            placeholder="VD: nv.a@gmail.com"
+            placeholder="email người dùng"
           />
         </div>
 

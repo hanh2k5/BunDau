@@ -21,6 +21,59 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Helper to translate common Laravel error messages
+function translateError(msg) {
+  if (!msg) return 'Đã có lỗi xảy ra'
+  
+  let translated = msg.toLowerCase()
+  
+  // Map field names
+  const fieldMap = {
+    'email': 'Email',
+    'password': 'Mật khẩu',
+    'name': 'Tên',
+    'price': 'Giá tiền',
+    'description': 'Mô tả',
+    'category': 'Phân loại',
+    'quantity': 'Số lượng',
+    'role': 'Chức vụ',
+    'is_available': 'Trạng thái phục vụ'
+  }
+
+  // Common patterns
+  if (translated.includes('is required') || translated.includes('field is required')) {
+    const field = Object.keys(fieldMap).find(k => translated.includes(k))
+    return `${fieldMap[field] || 'Trường này'} không được để trống.`
+  }
+  if (translated.includes('must be a number')) {
+    const field = Object.keys(fieldMap).find(k => translated.includes(k))
+    return `${fieldMap[field] || 'Trường này'} phải là một con số.`
+  }
+  if (translated.includes('already been taken')) {
+    const field = Object.keys(fieldMap).find(k => translated.includes(k))
+    return `${fieldMap[field] || 'Thông tin này'} đã tồn tại trong hệ thống.`
+  }
+  if (translated.includes('selected') && translated.includes('invalid')) {
+    return 'Lựa chọn không hợp lệ.'
+  }
+  if (translated.includes('must be at least')) {
+    return 'Giá trị quá nhỏ so với yêu cầu.'
+  }
+  if (translated.includes('unauthenticated')) {
+    return 'Phiên đăng nhập đã hết hạn.'
+  }
+
+  // Default translation for specific common backend messages
+  const directMap = {
+    'unauthorized': 'Bạn không có quyền thực hiện hành động này.',
+    'forbidden': 'Truy cập bị từ chối.',
+    'not found': 'Không tìm thấy dữ liệu yêu cầu.',
+    'the given data was invalid.': 'Dữ liệu không hợp lệ, vui lòng kiểm tra lại.'
+  }
+
+  return directMap[translated] || msg
+}
+
 // Response interceptor: handle global errors
 api.interceptors.response.use(
   (response) => response,
@@ -29,16 +82,15 @@ api.interceptors.response.use(
     const notification = useNotificationStore()
 
     if (status === 401) {
-      // Clear stored auth state
       localStorage.removeItem('auth')
       if (router.currentRoute.value.name !== 'login' && router.currentRoute.value.name !== 'menu') {
-        notification.error('Phiên đăng nhập đã hết hạn hoặc bạn đã đăng xuất ở tab khác.')
+        notification.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
         router.push('/login')
       }
     }
 
     if (status === 403) {
-      notification.error('Bạn không có quyền thực hiện thao tác này.')
+      notification.error('Bạn không có quyền truy cập khu vực này.')
       router.push('/403')
     }
 
@@ -46,10 +98,16 @@ api.interceptors.response.use(
       const errors = error.response?.data?.errors
       if (errors) {
         const firstError = Object.values(errors)[0][0]
-        notification.error(firstError)
+        notification.error(translateError(firstError))
       } else {
-        notification.error(error.response?.data?.message || 'Dữ liệu không hợp lệ.')
+        notification.error(translateError(error.response?.data?.message) || 'Dữ liệu không hợp lệ.')
       }
+    } else if (status >= 500) {
+      notification.error('Lỗi máy chủ, vui lòng thử lại sau.')
+    } else if (status !== 401 && status !== 403) {
+      // For other errors like 404, 400
+      const msg = error.response?.data?.message || error.message
+      notification.error(translateError(msg))
     }
 
     return Promise.reject(error)

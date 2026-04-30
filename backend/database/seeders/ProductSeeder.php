@@ -38,7 +38,8 @@ class ProductSeeder extends Seeder
             ['name' => 'Combo 4 người + 4 trà', 'price' => 220000, 'description' => 'Combo tiết kiệm cho 4 người kèm 4 trà tắc', 'category' => 'combo'],
 
             // --- Món Thêm ---
-            ['name' => 'Bún thêm', 'price' => 5000, 'description' => 'Thêm 1 phần bún', 'category' => 'other'],
+            ['name' => 'Bún thêm (bún đậu)', 'price' => 5000, 'description' => 'Thêm 1 phần bún đậu', 'category' => 'other'],
+            ['name' => 'Bún thêm (bún chả)', 'price' => 5000, 'description' => 'Thêm 1 phần bún chả', 'category' => 'other'],
             ['name' => 'Đậu thêm', 'price' => 10000, 'description' => 'Thêm 1 phần đậu hũ', 'category' => 'other'],
             ['name' => 'Chả cốm (thêm)', 'price' => 25000, 'description' => 'Thêm 1 phần chả cốm', 'category' => 'other'],
             ['name' => 'Dồi sụn (thêm)', 'price' => 25000, 'description' => 'Thêm 1 phần dồi sụn', 'category' => 'other'],

@@ -48,24 +48,22 @@ function goToPage(page) {
 </script>
 
 <template>
-  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+  <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
     <!-- Info -->
-    <div v-if="totalItems > 0" style="font-size: 13px; color: #86868b;">
-      <span style="font-weight: 600; color: #1d1d1f;">{{ totalItems }}</span> kết quả
+    <div v-if="totalItems > 0" class="text-[13px] font-medium text-slate-500">
+      <span class="font-bold text-slate-900">{{ totalItems }}</span> kết quả
     </div>
 
     <!-- Navigation -->
-    <div style="display: flex; align-items: center; gap: 4px;">
-      <!-- First Page -->
+    <div class="flex items-center gap-1 sm:gap-1.5">
       <button
         @click="goToPage(1)"
         :disabled="currentPage === 1"
-        style="width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #86868b; transition: all 0.15s ease;"
-        onmouseenter="if(!this.disabled) { this.style.background='rgba(0,0,0,0.04)'; this.style.color='#1d1d1f'; }"
-        onmouseleave="if(!this.disabled) { this.style.background='transparent'; this.style.color='#86868b'; }"
+        class="flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+        :class="currentPage === 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-primary-600'"
       >
-        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
         </svg>
       </button>
 
@@ -73,26 +71,25 @@ function goToPage(page) {
       <button
         @click="goToPage(currentPage - 1)"
         :disabled="currentPage === 1"
-        style="width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #86868b; transition: all 0.15s ease;"
-        onmouseenter="if(!this.disabled) { this.style.background='rgba(0,0,0,0.04)'; this.style.color='#1d1d1f'; }"
-        onmouseleave="if(!this.disabled) { this.style.background='transparent'; this.style.color='#86868b'; }"
+        class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+        :class="currentPage === 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-primary-600'"
       >
-        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
 
       <!-- Page Numbers -->
-      <div style="display: flex; align-items: center; gap: 4px; margin: 0 4px;">
+      <div class="flex items-center gap-1 mx-0.5">
         <template v-for="(page, index) in pages" :key="index">
-          <span v-if="page === '...'" style="padding: 0 4px; color: #86868b; font-weight: 600;">...</span>
+          <span v-if="page === '...'" class="px-1.5 text-slate-400 font-bold text-[11px]">...</span>
           <button
             v-else
             @click="goToPage(page)"
-            style="min-width: 32px; height: 32px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; padding: 0 8px;"
-            :style="currentPage === page ? 'background: #0071e3; color: white;' : 'background: transparent; color: #1d1d1f;'"
-            onmouseenter="if(this.style.background === 'transparent') { this.style.background='rgba(0,0,0,0.04)'; }"
-            onmouseleave="if(this.style.background === 'rgba(0, 0, 0, 0.04)') { this.style.background='transparent'; }"
+            class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 rounded-lg sm:rounded-xl text-[12px] sm:text-[13px] font-bold transition-all duration-200"
+            :class="currentPage === page 
+              ? 'bg-primary-600 text-white shadow-md shadow-primary-500/20' 
+              : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-primary-600 border border-transparent hover:border-slate-100'"
           >
             {{ page }}
           </button>
@@ -103,25 +100,22 @@ function goToPage(page) {
       <button
         @click="goToPage(currentPage + 1)"
         :disabled="currentPage === totalPages"
-        style="width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #86868b; transition: all 0.15s ease;"
-        onmouseenter="if(!this.disabled) { this.style.background='rgba(0,0,0,0.04)'; this.style.color='#1d1d1f'; }"
-        onmouseleave="if(!this.disabled) { this.style.background='transparent'; this.style.color='#86868b'; }"
+        class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+        :class="currentPage === totalPages ? 'text-slate-300' : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-primary-600'"
       >
-        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
         </svg>
       </button>
 
-      <!-- Last Page -->
       <button
         @click="goToPage(totalPages)"
         :disabled="currentPage === totalPages"
-        style="width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #86868b; transition: all 0.15s ease;"
-        onmouseenter="if(!this.disabled) { this.style.background='rgba(0,0,0,0.04)'; this.style.color='#1d1d1f'; }"
-        onmouseleave="if(!this.disabled) { this.style.background='transparent'; this.style.color='#86868b'; }"
+        class="flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+        :class="currentPage === totalPages ? 'text-slate-300' : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-primary-600'"
       >
-        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
         </svg>
       </button>
     </div>
