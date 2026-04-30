@@ -39,7 +39,13 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # Create a start script to run migrations and then start Apache
-RUN echo '#!/bin/sh\nphp artisan migrate --force\napache2-foreground' > /usr/local/bin/start-app.sh && \
+RUN echo '#!/bin/sh\n\
+php artisan migrate --force\n\
+php artisan storage:link --force\n\
+php artisan config:cache\n\
+php artisan route:cache\n\
+php artisan view:cache\n\
+apache2-foreground' > /usr/local/bin/start-app.sh && \
     chmod +x /usr/local/bin/start-app.sh
 
 # Start the application using the script

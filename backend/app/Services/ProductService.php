@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
+use Cloudinary\Cloudinary;
 
 class ProductService
 {
@@ -36,7 +37,17 @@ class ProductService
     public function create(array $data): Product
     {
         if (isset($data['image'])) {
-            $data['image_path'] = $data['image']->store('products', 'public');
+            $cloudinary = new Cloudinary([
+                'cloud' => [
+                    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                    'api_key'    => env('CLOUDINARY_API_KEY'),
+                    'api_secret' => env('CLOUDINARY_API_SECRET'),
+                ],
+            ]);
+            $result = $cloudinary->uploadApi()->upload($data['image']->getRealPath(), [
+                'folder' => 'products'
+            ]);
+            $data['image_path'] = $result['secure_url'];
             unset($data['image']);
         }
 
@@ -57,16 +68,19 @@ class ProductService
 
         // Handle image update
         if (isset($data['image'])) {
-            // Delete old image if exists
-            if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
-            }
-            $data['image_path'] = $data['image']->store('products', 'public');
+            $cloudinary = new Cloudinary([
+                'cloud' => [
+                    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                    'api_key'    => env('CLOUDINARY_API_KEY'),
+                    'api_secret' => env('CLOUDINARY_API_SECRET'),
+                ],
+            ]);
+            $result = $cloudinary->uploadApi()->upload($data['image']->getRealPath(), [
+                'folder' => 'products'
+            ]);
+            $data['image_path'] = $result['secure_url'];
             unset($data['image']);
         } elseif (isset($data['delete_image']) && $data['delete_image']) {
-            if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
-            }
             $data['image_path'] = null;
         }
 

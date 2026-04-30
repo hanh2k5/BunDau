@@ -48,7 +48,15 @@ class Product extends Model
      */
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image_path ? asset('storage/' . $this->image_path) : null;
+        if (!$this->image_path) {
+            return null;
+        }
+
+        if (filter_var($this->image_path, FILTER_VALIDATE_URL)) {
+            return $this->image_path;
+        }
+
+        return asset('storage/' . $this->image_path);
     }
 
     // ── Relationships ──────────────────────────────────────

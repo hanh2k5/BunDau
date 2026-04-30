@@ -71,31 +71,29 @@ async function fetchRange() {
 
 function setPresetRange(type) {
   activeRange.value = type
-  const now = new Date()
-  const today = now.toISOString().split('T')[0]
+  // Use sv-SE locale to get YYYY-MM-DD in local time
+  const today = new Date().toLocaleDateString('sv-SE')
   
   if (type === 'today') {
     fromDate.value = today
     toDate.value = today
   } else if (type === 'yesterday') {
-    const yesterday = new Date(now)
-    yesterday.setDate(now.getDate() - 1)
-    const yStr = yesterday.toISOString().split('T')[0]
-    fromDate.value = yStr
-    toDate.value = yStr
+    const yesterdayDate = new Date()
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+    fromDate.value = yesterdayDate.toLocaleDateString('sv-SE')
+    toDate.value = yesterdayDate.toLocaleDateString('sv-SE')
   } else if (type === 'last7') {
-    const last7 = new Date(now)
-    last7.setDate(now.getDate() - 7)
-    fromDate.value = last7.toISOString().split('T')[0]
+    const last7Date = new Date()
+    last7Date.setDate(last7Date.getDate() - 7)
+    fromDate.value = last7Date.toLocaleDateString('sv-SE')
     toDate.value = today
   } else if (type === 'month') {
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    // Adjust for timezone offset to get local YYYY-MM-DD
-    const fStr = new Date(firstDay.getTime() - (firstDay.getTimezoneOffset() * 60000)).toISOString().split('T')[0]
-    fromDate.value = fStr
+    const last30 = new Date()
+    last30.setDate(last30.getDate() - 30)
+    fromDate.value = last30.toLocaleDateString('sv-SE')
     toDate.value = today
   } else if (type === 'all') {
-    fromDate.value = '2020-01-01' // An old enough date
+    fromDate.value = '2026-04-30'
     toDate.value = today
   }
   

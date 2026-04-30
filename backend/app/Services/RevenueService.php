@@ -13,7 +13,7 @@ class RevenueService
      */
     public function today(): array
     {
-        return $this->byDate(Carbon::today());
+        return $this->byDate(now('Asia/Ho_Chi_Minh'));
     }
 
     /**
@@ -22,9 +22,13 @@ class RevenueService
     public function byDate(Carbon|string $date): array
     {
         $date = $date instanceof Carbon ? $date : Carbon::parse($date);
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        $dateSql = $driver === 'pgsql' 
+            ? "CAST(paid_at + INTERVAL '7 hours' AS DATE)" 
+            : "DATE(DATE_ADD(paid_at, INTERVAL 7 HOUR))";
 
         $stats = Order::where('status', OrderStatusEnum::DONE)
-                       ->whereDate('paid_at', $date)
+                       ->whereRaw("$dateSql = ?", [$date->toDateString()])
                        ->selectRaw('COUNT(*) as count, SUM(total) as revenue')
                        ->first();
 
@@ -43,19 +47,21 @@ class RevenueService
      */
     public function byRange(string $from, string $to): array
     {
-        $fromDate = Carbon::parse($from)->startOfDay();
-        $toDate   = Carbon::parse($to)->endOfDay();
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        $dateSql = $driver === 'pgsql' 
+            ? "CAST(paid_at + INTERVAL '7 hours' AS DATE)" 
+            : "DATE(DATE_ADD(paid_at, INTERVAL 7 HOUR))";
 
-        // 1. Get totals via SQL
+        // 1. Get totals via SQL - Using the same timezone-aware logic for filtering
         $totals = Order::where('status', OrderStatusEnum::DONE)
-            ->whereBetween('paid_at', [$fromDate, $toDate])
+            ->whereRaw("$dateSql BETWEEN ? AND ?", [$from, $to])
             ->selectRaw('COUNT(*) as count, SUM(total) as revenue')
             ->first();
 
         // 2. Get daily breakdown via SQL
         $dailyRevenue = Order::where('status', OrderStatusEnum::DONE)
-            ->whereBetween('paid_at', [$fromDate, $toDate])
-            ->selectRaw('DATE(paid_at) as date, COUNT(*) as total_orders, SUM(total) as total_revenue')
+            ->whereRaw("$dateSql BETWEEN ? AND ?", [$from, $to])
+            ->selectRaw("$dateSql as date, COUNT(*) as total_orders, SUM(total) as total_revenue")
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -66,8 +72,8 @@ class RevenueService
             ]);
 
         return [
-            'from'              => $fromDate->toDateString(),
-            'to'                => $toDate->toDateString(),
+            'from'              => $from,
+            'to'                => $to,
             'total_orders'      => (int) $totals->count,
             'total_revenue'     => (int) $totals->revenue,
             'average_per_order' => $totals->count > 0
@@ -88,8 +94,13 @@ class RevenueService
             ->first();
 
         // 2. Today summary
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        $dateSql = $driver === 'pgsql' 
+            ? "CAST(paid_at + INTERVAL '7 hours' AS DATE)" 
+            : "DATE(DATE_ADD(paid_at, INTERVAL 7 HOUR))";
+
         $today = Order::where('status', OrderStatusEnum::DONE)
-            ->whereDate('paid_at', Carbon::today())
+            ->whereRaw("$dateSql = ?", [now('Asia/Ho_Chi_Minh')->toDateString()])
             ->selectRaw('COUNT(*) as count, SUM(total) as revenue')
             ->first();
 

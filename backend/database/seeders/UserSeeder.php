@@ -15,9 +15,9 @@ class UserSeeder extends Seeder
     {
         // Disable foreign keys to allow truncation if needed, 
         // though migrate:fresh already clears tables.
-        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         User::truncate();
-        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         // 1. Admin account
         User::create([

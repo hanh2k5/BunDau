@@ -3,7 +3,9 @@ import router from '@/router'
 import { useNotificationStore } from '@/stores/notification.store'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.PROD 
+    ? 'https://bundau.onrender.com/api' 
+    : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api'),
   headers: {
     Accept: 'application/json',
   },
@@ -57,7 +59,13 @@ function translateError(msg) {
     return 'Lựa chọn không hợp lệ.'
   }
   if (translated.includes('must be at least')) {
-    return 'Giá trị quá nhỏ so với yêu cầu.'
+    return 'Giá trị quá nhỏ so với yêu cầu.';
+  }
+  if (translated.includes('must be a date after or equal to')) {
+    return 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.';
+  }
+  if (translated.includes('must be a date before or equal to')) {
+    return 'Ngày không được vượt quá thời điểm hiện tại.';
   }
   if (translated.includes('unauthenticated')) {
     return 'Phiên đăng nhập đã hết hạn.'
