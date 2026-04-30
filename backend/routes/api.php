@@ -19,6 +19,22 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 });
 
+// Secure Maintenance Route (For freshing DB on Render Free)
+// Usage: /api/maintenance/reset-db?key=ALuPOS2026
+Route::get('/maintenance/reset-db', function (Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'ALuPOS2026') {
+        return response()->json(['error' => 'Sai mật khẩu bảo trì!'], 403);
+    }
+
+    try {
+        Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        return response()->json(['message' => 'Làm mới Database thành công!']);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
