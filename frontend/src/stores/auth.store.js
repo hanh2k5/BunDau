@@ -42,6 +42,10 @@ export const useAuthStore = defineStore('auth', {
       } catch {
         // Ignore logout errors
       } finally {
+        const { useCartStore } = await import('./cart.store')
+        const cart = useCartStore()
+        cart.clear()
+        
         this.token = null
         this.user = null
       }

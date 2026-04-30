@@ -76,7 +76,13 @@ function translateError(msg) {
     'unauthorized': 'Bạn không có quyền thực hiện hành động này.',
     'forbidden': 'Truy cập bị từ chối.',
     'not found': 'Không tìm thấy dữ liệu yêu cầu.',
-    'the given data was invalid.': 'Dữ liệu không hợp lệ, vui lòng kiểm tra lại.'
+    'the given data was invalid.': 'Dữ liệu không hợp lệ, vui lòng kiểm tra lại.',
+    'order already processed': 'Đơn hàng đã được xử lý ở một tab khác.',
+    'order already has the status': 'Trạng thái đơn hàng đã được cập nhật trước đó.',
+    'the order already has the status': 'Trạng thái đơn hàng đã được cập nhật trước đó.',
+    'csrf token mismatch': 'Lỗi bảo mật (CSRF), vui lòng tải lại trang.',
+    'network error': 'Lỗi kết nối mạng, vui lòng kiểm tra lại.',
+    'timeout': 'Hết thời gian chờ phản hồi từ máy chủ.'
   }
 
   return directMap[translated] || msg

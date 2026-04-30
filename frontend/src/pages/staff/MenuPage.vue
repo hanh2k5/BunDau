@@ -98,19 +98,23 @@ function closeDetailModal() {
       <div class="space-y-2">
         <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter leading-none">Thực đơn</h1>
         <p class="text-[12px] sm:text-[13px] text-slate-400 font-bold uppercase tracking-[0.2em]">Hương vị chuẩn vị Bắc • Tinh hoa ẩm thực</p>
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1">
-          <div class="flex items-center gap-1.5 text-slate-400">
-            <svg class="w-3.5 h-3.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span class="text-[10px] font-bold text-slate-500">Số 3, Đường 35, Hiệp Bình, TP. HCM</span>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 pt-2">
+          <div class="flex items-center gap-2 text-slate-500">
+            <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center text-primary-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <span class="text-[11px] font-bold leading-tight">Số 3, Đường 35, Hiệp Bình, TP. HCM</span>
           </div>
-          <div class="flex items-center gap-1.5 text-slate-400 border-l border-slate-200 pl-4 sm:border-l sm:pl-4">
-            <svg class="w-3.5 h-3.5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="text-[10px] font-bold text-slate-500 whitespace-nowrap">Mở cửa: 10:00 - 21:00</span>
+          <div class="flex items-center gap-2 text-slate-500 sm:border-l sm:border-slate-200 sm:pl-6">
+            <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span class="text-[11px] font-bold whitespace-nowrap">Mở cửa: 10:00 - 21:00</span>
           </div>
         </div>
       </div>
@@ -170,6 +174,7 @@ function closeDetailModal() {
           v-for="product in paginatedProducts"
           :key="product.id"
           :product="product"
+          :show-actions="auth.isLoggedIn"
           @add-to-cart="addToCart"
           @view-detail="openDetailModal"
         />
@@ -238,7 +243,7 @@ function closeDetailModal() {
 
     <!-- Floating Quick Cart (Fixed Bottom) -->
     <transition name="slide-up">
-      <div v-if="cart.totalItems > 0" class="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
+      <div v-if="cart.totalItems > 0 && auth.isLoggedIn" class="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
         <button 
           @click="() => router.push({ name: 'cart' })"
           class="w-full bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] p-4 flex items-center justify-between active:bg-slate-50 transition-colors"

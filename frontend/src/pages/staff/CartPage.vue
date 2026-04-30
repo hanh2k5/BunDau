@@ -95,6 +95,16 @@ async function handleCheckout() {
             placeholder="chuyển khoản, tiền mặc..."
           ></textarea>
         </div>
+
+        <!-- Mobile-only: Clear Cart Button -->
+        <div class="lg:hidden mt-6 px-1">
+          <button
+            @click="cart.clear()"
+            class="w-full py-4 rounded-[1.25rem] bg-red-50 text-red-500 text-[11px] font-black uppercase tracking-[0.2em] border border-red-100 active:scale-95 transition-all shadow-sm"
+          >
+            🗑️ Xoá toàn bộ giỏ hàng
+          </button>
+        </div>
       </div>
 
       <!-- Order Summary — Desktop -->
