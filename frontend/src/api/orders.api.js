@@ -13,8 +13,12 @@ export const ordersApi = {
     return api.post('/orders', data)
   },
 
-  pay(id) {
-    return api.patch(`/orders/${id}/pay`)
+  pay(id, paymentMethod = 'cash') {
+    return api.patch(`/orders/${id}/pay`, { payment_method: paymentMethod })
+  },
+
+  addItems(id, data) {
+    return api.post(`/orders/${id}/add-items`, data)
   },
 
   cancel(id) {

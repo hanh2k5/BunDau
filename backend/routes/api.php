@@ -60,12 +60,15 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Orders — access controlled by OrderPolicy
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::patch('/orders/{order}/pay', [OrderController::class, 'pay'])->name('orders.pay');
-    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
-    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/', [OrderController::class, 'store'])->name('orders.store');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/{order}/pay', [OrderController::class, 'pay'])->name('orders.pay');
+        Route::patch('/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/{order}/add-items', [OrderController::class, 'addItems'])->name('orders.add-items');
+        Route::delete('/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+    });
 
     // Revenue — admin only
     Route::middleware('admin')->prefix('revenue')->group(function () {

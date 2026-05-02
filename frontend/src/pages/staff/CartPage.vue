@@ -13,7 +13,6 @@ const cart = useCartStore()
 const ordersStore = useOrdersStore()
 const notification = useNotificationStore()
 
-const note = ref('')
 const submitting = ref(false)
 
 async function handleCheckout() {
@@ -21,17 +20,24 @@ async function handleCheckout() {
     notification.warning('Giỏ hàng trống!')
     return
   }
+  
   submitting.value = true
   try {
-    const payload = cart.toApiPayload(note.value || null)
-    await ordersStore.createOrder(payload)
-    notification.success('Tạo đơn hàng thành công!')
+    // Note is removed, using null
+    const payload = cart.toApiPayload(null, 'cash', cart.tableNumber || null)
+    
+    if (cart.activeOrderId) {
+      await ordersStore.addItemsToOrder(cart.activeOrderId, payload)
+      notification.success('Đã thêm món xong!')
+    } else {
+      await ordersStore.createOrder(payload)
+      notification.success('Đã đặt món!')
+    }
+    
     cart.clear()
-    note.value = ''
     router.push('/orders')
   } catch (err) {
-    const message = err.response?.data?.message || 'Lỗi tạo đơn hàng'
-    notification.error(message)
+    notification.error(err.response?.data?.message || 'Lỗi xử lý')
   } finally {
     submitting.value = false
   }
@@ -39,40 +45,67 @@ async function handleCheckout() {
 </script>
 
 <template>
-  <div class="pb-32 sm:pb-40">
+  <div class="pb-32 sm:pb-40 px-3">
     <!-- Page Header -->
-    <div class="mb-10 px-2">
-      <div class="flex items-center justify-between mb-2">
-        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase">Giỏ hàng</h1>
-      </div>
-      <p class="text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] mb-6">
-        {{ cart.itemCount }} LOẠI MÓN • {{ cart.totalItems }} PHẦN ĂN
+    <div class="mb-5">
+      <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase mb-0.5">
+        {{ cart.activeOrderId ? 'Xác nhận món thêm' : 'Giỏ hàng' }}
+      </h1>
+      <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+        {{ cart.totalItems }} phần ăn • {{ formatCurrency(cart.totalAmount) }}
       </p>
-      
-      <router-link
-        :to="{ name: 'menu' }"
-        class="flex items-center justify-center w-full py-3.5 rounded-[1.25rem] bg-slate-50/50 border-2 border-slate-100/50 text-[12px] font-black text-slate-500 hover:bg-white hover:border-primary-200 hover:text-primary-600 transition-all active:scale-[0.98] uppercase tracking-[0.15em] shadow-sm"
-      >
-        <span class="mr-2 opacity-50">←</span> CHỌN THÊM MÓN
-      </router-link>
     </div>
 
     <!-- Empty State -->
     <AppEmpty
       v-if="cart.isEmpty"
       icon="🛒"
-      title="Giỏ hàng đang trống"
-      description="Hãy chọn món từ thực đơn để bắt đầu đặt hàng."
+      title="Giỏ trống"
+      description="Quay lại thực đơn chọn món nhé!"
     >
       <button class="btn-apple px-8" @click="router.push({ name: 'menu' })">
-        Xem thực đơn ngay
+        Xem thực đơn
       </button>
     </AppEmpty>
 
     <!-- Cart Content -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Cart Items -->
-      <div class="lg:col-span-2 flex flex-col gap-4">
+    <div v-else class="space-y-4">
+      <!-- Table Selection (Only for New Order) -->
+      <div v-if="!cart.activeOrderId" class="bg-white p-5 rounded-[1.75rem] shadow-sm border border-slate-50">
+        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">📍 Chọn bàn</label>
+        <input
+          v-model="cart.tableNumber"
+          type="text"
+          placeholder="chọn bàn..."
+          class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm font-black text-slate-800 focus:ring-2 focus:ring-primary-500/20 transition-all mb-3"
+        />
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          <button 
+            v-for="t in ['Bàn quạt cam', 'Bàn bình đá', 'Bàn giữa', 'Bàn sát bên', 'Bàn sát bên (trái)']" 
+            :key="t"
+            @click="cart.tableNumber = t"
+            class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all active:scale-95 whitespace-nowrap"
+            :class="cart.tableNumber === t ? 'bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-slate-50 text-slate-500'"
+          >
+            {{ t }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Editing Info (Locked Table) -->
+      <div v-else class="bg-orange-500 text-white p-4 rounded-[1.75rem] shadow-lg shadow-orange-500/20 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🍜</span>
+          <div>
+            <p class="text-[8px] font-black uppercase tracking-widest text-orange-100">Đang thêm món cho</p>
+            <p class="text-[16px] font-black tracking-tight leading-none">{{ cart.tableNumber || 'Đơn #' + cart.activeOrderId }}</p>
+          </div>
+        </div>
+        <button @click="cart.clear()" class="text-[9px] font-black uppercase tracking-widest bg-white/20 px-3 py-1.5 rounded-lg active:scale-95">Huỷ sửa</button>
+      </div>
+
+      <!-- Cart Items List -->
+      <div class="space-y-3">
         <CartItem
           v-for="item in cart.items"
           :key="item.product_id"
@@ -82,89 +115,47 @@ async function handleCheckout() {
           @update-quantity="cart.updateQuantity"
           @remove="cart.removeItem"
         />
-
-        <!-- Note -->
-        <div class="mt-4 px-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">
-            Ghi chú để dễ lọc
-          </label>
-          <textarea
-            v-model="note"
-            rows="3"
-            class="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] p-5 text-sm font-bold text-slate-700 focus:outline-none focus:border-primary-500 focus:bg-white transition-all resize-none placeholder-slate-300 shadow-inner"
-            placeholder="chuyển khoản, tiền mặc..."
-          ></textarea>
-        </div>
-
-        <!-- Mobile-only: Clear Cart Button -->
-        <div class="lg:hidden mt-6 px-1">
-          <button
-            @click="cart.clear()"
-            class="w-full py-4 rounded-[1.25rem] bg-red-50 text-red-500 text-[11px] font-black uppercase tracking-[0.2em] border border-red-100 active:scale-95 transition-all shadow-sm"
-          >
-            🗑️ Xoá toàn bộ giỏ hàng
-          </button>
-        </div>
       </div>
 
-      <!-- Order Summary — Desktop -->
-      <div class="hidden lg:block">
-        <div class="card p-8 sticky top-24 shadow-xl shadow-slate-200/50 border-slate-200/60">
-          <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">
-            Tóm tắt đơn hàng
-          </h3>
-
-          <div class="space-y-4 mb-10">
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-slate-500 font-bold">Số lượng</span>
-              <span class="text-slate-900 font-black">{{ cart.totalItems }} món</span>
-            </div>
-            <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
-              <span class="text-base font-black text-slate-900">Tổng cộng</span>
-              <span class="text-3xl font-black text-primary-600 tracking-tighter">
-                {{ formatCurrency(cart.totalAmount) }}
-              </span>
-            </div>
-          </div>
-
-          <button
-            class="btn-apple w-full py-4 text-base shadow-xl shadow-primary-500/20 active:scale-[0.98] transition-all"
-            :disabled="submitting"
-            @click="handleCheckout"
-          >
-            {{ submitting ? 'Đang xử lý...' : 'Đặt hàng ngay' }}
-          </button>
-
-          <button
-            @click="cart.clear()"
-            class="w-full mt-4 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors py-2"
-          >
-            Xoá toàn bộ giỏ hàng
-          </button>
-        </div>
-      </div>
+      <!-- Quick Add More -->
+      <button
+        @click="router.push({ name: 'menu' })"
+        class="w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-[0.98]"
+      >
+        + Chọn thêm món khác
+      </button>
     </div>
 
     <!-- Mobile Floating Checkout Bar -->
     <div
       v-if="!cart.isEmpty"
-      class="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]"
+      class="fixed bottom-0 left-0 right-0 z-40 p-3 bg-white/90 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]"
     >
       <div class="max-w-xl mx-auto flex items-center justify-between gap-4">
-        <div class="min-w-0">
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ cart.totalItems }} phần ăn</p>
-          <p class="text-2xl font-black text-slate-900 tracking-tighter truncate">
+        <div class="min-w-0 pl-1">
+          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ cart.totalItems }} phần</p>
+          <p class="text-xl font-black text-slate-900 tracking-tighter truncate leading-none">
             {{ formatCurrency(cart.totalAmount) }}
           </p>
         </div>
         <button
-          class="btn-apple px-10 py-3.5 text-sm shadow-xl shadow-primary-500/20 active:scale-95 transition-all whitespace-nowrap"
+          class="bg-primary-600 text-white px-8 py-3.5 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-primary-500/20 active:scale-95 transition-all disabled:opacity-50"
           :disabled="submitting"
           @click="handleCheckout"
         >
-          {{ submitting ? '...' : 'Đặt hàng' }}
+          {{ submitting ? '...' : (cart.activeOrderId ? 'Xác nhận' : 'Đặt món') }}
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

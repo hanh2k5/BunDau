@@ -137,23 +137,20 @@ function setPresetRange(type) {
         </div>
 
         <div class="stat-card">
-          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Trung bình</p>
-          <p class="font-black text-2xl text-slate-900 tracking-tight mb-2">
-            {{ formatCurrency(summary?.all_time?.average_per_order || 0) }}
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Hôm nay: Tiền mặt</p>
+          <p class="font-black text-2xl text-emerald-600 tracking-tight mb-2">
+            {{ formatCurrency(todayData?.cash_revenue || 0) }}
           </p>
-          <p class="text-[11px] font-bold text-slate-500">Mỗi đơn hàng thành công</p>
+          <p class="text-[11px] font-bold text-slate-500">Tiền mặt thu tại quầy</p>
         </div>
 
-        <button 
-          @click="router.push({ name: 'orders', query: { status: 'pending' } })"
-          class="stat-card group text-left transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl hover:shadow-orange-500/10 border-transparent hover:border-orange-100"
-        >
-          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 group-hover:text-orange-500 transition-colors">Đang chờ</p>
-          <p class="font-black text-3xl text-orange-500 tracking-tight mb-2">
-            {{ summary?.pending_orders || 0 }}
+        <div class="stat-card">
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Hôm nay: Chuyển khoản</p>
+          <p class="font-black text-2xl text-blue-600 tracking-tight mb-2">
+            {{ formatCurrency(todayData?.transfer_revenue || 0) }}
           </p>
-          <p class="text-[11px] font-bold text-slate-500">Đơn hàng chưa hoàn thành</p>
-        </button>
+          <p class="text-[11px] font-bold text-slate-500">Tiền nhận qua ngân hàng</p>
+        </div>
       </div>
 
       <!-- Date range filter -->
@@ -205,23 +202,29 @@ function setPresetRange(type) {
 
         <!-- Range results -->
         <div v-if="rangeData" class="mt-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white/60 rounded-xl p-4 border border-white/80 shadow-sm">
-              <span class="text-sm font-semibold text-slate-500">Tổng doanh thu</span>
-              <p class="text-xl font-bold text-primary-600 mt-1">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng doanh thu</span>
+              <p class="text-xl font-black text-primary-600 mt-1 tracking-tighter">
                 {{ formatCurrency(rangeData.total_revenue) }}
               </p>
             </div>
             <div class="bg-white/60 rounded-xl p-4 border border-white/80 shadow-sm">
-              <span class="text-sm font-semibold text-slate-500">Số đơn</span>
-              <p class="text-xl font-bold text-emerald-600 mt-1">
-                {{ rangeData.total_orders }}
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiền mặt</span>
+              <p class="text-xl font-black text-emerald-600 mt-1 tracking-tighter">
+                {{ formatCurrency(rangeData.cash_revenue) }}
               </p>
             </div>
             <div class="bg-white/60 rounded-xl p-4 border border-white/80 shadow-sm">
-              <span class="text-sm font-semibold text-slate-500">TB / đơn</span>
-              <p class="text-xl font-bold text-accent-600 mt-1">
-                {{ formatCurrency(rangeData.average_per_order) }}
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chuyển khoản</span>
+              <p class="text-xl font-black text-blue-600 mt-1 tracking-tighter">
+                {{ formatCurrency(rangeData.transfer_revenue) }}
+              </p>
+            </div>
+            <div class="bg-white/60 rounded-xl p-4 border border-white/80 shadow-sm">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số đơn</span>
+              <p class="text-xl font-black text-slate-900 mt-1">
+                {{ rangeData.total_orders }} đơn
               </p>
             </div>
           </div>

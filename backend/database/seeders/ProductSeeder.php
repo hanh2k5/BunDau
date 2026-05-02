@@ -29,7 +29,6 @@ class ProductSeeder extends Seeder
             ['name' => 'Bún chả Hà Nội', 'price' => 40000, 'description' => 'Bún chả Hà Nội truyền thống', 'category' => 'bun-cha'],
             ['name' => 'Bún nem Hà Nội', 'price' => 40000, 'description' => 'Bún nem Hà Nội giòn tan', 'category' => 'bun-cha'],
             ['name' => 'Bún chả + nem Hà Nội', 'price' => 55000, 'description' => 'Combo bún chả và nem Hà Nội', 'category' => 'bun-cha'],
-            ['name' => 'Thịt chả thêm', 'price' => 30000, 'description' => 'Thêm thịt chả cho bún chả', 'category' => 'bun-cha'],
 
             // --- Combo + Trà Tắc ---
             ['name' => 'Combo 1 người + 1 trà', 'price' => 65000, 'description' => 'Combo tiết kiệm cho 1 người kèm trà tắc', 'category' => 'combo'],
@@ -47,6 +46,8 @@ class ProductSeeder extends Seeder
             ['name' => 'Thịt (thêm)', 'price' => 25000, 'description' => 'Thêm 1 phần thịt', 'category' => 'other'],
             ['name' => 'Nem chua rán (thêm)', 'price' => 20000, 'description' => 'Thêm 1 phần nem chua rán', 'category' => 'other'],
             ['name' => 'Nem Hà Nội (thêm)', 'price' => 20000, 'description' => 'Thêm 1 phần nem Hà Nội', 'category' => 'other'],
+            ['name' => 'Thịt chả thêm', 'price' => 30000, 'description' => 'Thêm thịt chả cho bún chả', 'category' => 'other'],
+
 
             // --- Nước ---
             ['name' => 'Trà tắc', 'price' => 5000, 'description' => 'Trà tắc thơm mát', 'category' => 'drink'],

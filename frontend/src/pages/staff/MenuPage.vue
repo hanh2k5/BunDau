@@ -21,6 +21,30 @@ const notification = useNotificationStore()
 const loading = ref(true)
 const products = ref([])
 const activeCategory = ref('all')
+const categoryScroll = ref(null)
+
+// Drag to scroll logic for Desktop
+let isDragging = false
+let startX
+let scrollLeft
+
+const startDragging = (e) => {
+  isDragging = true
+  startX = e.pageX - categoryScroll.value.offsetLeft
+  scrollLeft = categoryScroll.value.scrollLeft
+}
+
+const stopDragging = () => {
+  isDragging = false
+}
+
+const onDragging = (e) => {
+  if (!isDragging) return
+  e.preventDefault()
+  const x = e.pageX - categoryScroll.value.offsetLeft
+  const walk = (x - startX) * 2 // Scroll speed
+  categoryScroll.value.scrollLeft = scrollLeft - walk
+}
 const searchQuery = ref('')
 
 // Pagination state
@@ -120,6 +144,33 @@ function closeDetailModal() {
       </div>
     </div>
 
+    <!-- Editing Mode Banner (Sticky) -->
+    <div v-if="cart.activeOrderId" class="px-2 animate-slide-down">
+      <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl shadow-xl shadow-orange-500/20 p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl">🍜</div>
+          <div class="min-w-0">
+            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-orange-100/80">Đang thêm món cho</p>
+            <p class="text-[15px] font-black tracking-tight truncate">{{ cart.tableNumber || 'Đơn #' + cart.activeOrderId }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button 
+            @click="cart.clear()"
+            class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+          >
+            Huỷ
+          </button>
+          <button 
+            @click="router.push({ name: 'cart' })"
+            class="px-4 py-2 rounded-xl bg-white text-orange-600 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+          >
+            Xong
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Search & Filter Bar (Fixed Top) -->
     <div class="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-4 py-3 mb-6">
       <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4">
@@ -138,7 +189,15 @@ function closeDetailModal() {
         </div>
 
         <!-- Categories -->
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto">
+        <div 
+          ref="categoryScroll"
+          class="flex flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto scroll-smooth touch-pan-x pb-1 cursor-grab active:cursor-grabbing" 
+          style="-webkit-overflow-scrolling: touch;"
+          @mousedown="startDragging"
+          @mousemove="onDragging"
+          @mouseup="stopDragging"
+          @mouseleave="stopDragging"
+        >
           <button
             @click="activeCategory = 'all'"
             class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap"
@@ -277,12 +336,34 @@ function closeDetailModal() {
 </template>
 
 <style scoped>
+/* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Show subtle scrollbar on desktop with mouse */
+@media (pointer: fine) {
+  .no-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+  .no-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 20px;
+  }
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 .slide-up-enter-active, .slide-up-leave-active {
@@ -291,5 +372,13 @@ function closeDetailModal() {
 .slide-up-enter-from, .slide-up-leave-to {
   transform: translateY(120%) scale(0.9);
   opacity: 0;
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-down {
+  animation: slide-down 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

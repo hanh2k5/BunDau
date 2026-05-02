@@ -60,15 +60,35 @@ class OrderController extends Controller
     /**
      * Pay an order (pending → done).
      */
-    public function pay(Order $order): JsonResponse
+    public function pay(Order $order, Request $request): JsonResponse
     {
         Gate::authorize('pay', $order);
 
-        $order = $this->orderService->pay($order);
+        $request->validate([
+            'payment_method' => 'required|in:cash,transfer',
+        ]);
+
+        $order = $this->orderService->pay($order, $request->payment_method);
 
         return response()->json([
             'success' => true,
             'message' => 'Thanh toán thành công',
+            'data'    => new OrderResource($order),
+        ]);
+    }
+
+    /**
+     * Add items to an existing order.
+     */
+    public function addItems(Order $order, StoreOrderRequest $request): JsonResponse
+    {
+        Gate::authorize('view', $order); // Reuse view permission
+
+        $order = $this->orderService->addItems($order, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thêm món thành công',
             'data'    => new OrderResource($order),
         ]);
     }

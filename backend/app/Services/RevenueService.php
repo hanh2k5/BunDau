@@ -34,16 +34,23 @@ class RevenueService
 
         $stats = Order::where('status', OrderStatusEnum::DONE)
                        ->whereBetween('paid_at', [$start, $end])
-                       ->selectRaw('COUNT(*) as count, SUM(total) as revenue')
+                       ->selectRaw('
+                            COUNT(*) as count, 
+                            SUM(total) as revenue,
+                            SUM(CASE WHEN payment_method = \'cash\' THEN total ELSE 0 END) as cash_revenue,
+                            SUM(CASE WHEN payment_method = \'transfer\' THEN total ELSE 0 END) as transfer_revenue
+                       ')
                        ->first();
 
         $count = (int) ($stats->count ?? 0);
         $revenue = (int) ($stats->revenue ?? 0);
 
         return [
-            'date'         => $date->toDateString(),
-            'total_orders' => $count,
-            'total_revenue' => $revenue,
+            'date'              => $date->toDateString(),
+            'total_orders'      => $count,
+            'total_revenue'     => $revenue,
+            'cash_revenue'      => (int) ($stats->cash_revenue ?? 0),
+            'transfer_revenue'  => (int) ($stats->transfer_revenue ?? 0),
             'average_per_order' => $count > 0 ? (int) round($revenue / $count) : 0,
         ];
     }
@@ -59,7 +66,12 @@ class RevenueService
         // 1. Get totals
         $totals = Order::where('status', OrderStatusEnum::DONE)
             ->whereBetween('paid_at', [$fromDate, $toDate])
-            ->selectRaw('COUNT(*) as count, SUM(total) as revenue')
+            ->selectRaw('
+                COUNT(*) as count, 
+                SUM(total) as revenue,
+                SUM(CASE WHEN payment_method = \'cash\' THEN total ELSE 0 END) as cash_revenue,
+                SUM(CASE WHEN payment_method = \'transfer\' THEN total ELSE 0 END) as transfer_revenue
+            ')
             ->first();
 
         $count = (int) ($totals->count ?? 0);
@@ -88,6 +100,8 @@ class RevenueService
             'to'                => $to,
             'total_orders'      => $count,
             'total_revenue'     => $revenue,
+            'cash_revenue'      => (int) ($totals->cash_revenue ?? 0),
+            'transfer_revenue'  => (int) ($totals->transfer_revenue ?? 0),
             'average_per_order' => $count > 0 ? (int) round($revenue / $count) : 0,
             'daily'             => $dailyRevenue,
         ];
@@ -111,8 +125,10 @@ class RevenueService
 
         return [
             'today' => [
-                'total_orders'  => $today['total_orders'] ?? 0,
-                'total_revenue' => $today['total_revenue'] ?? 0,
+                'total_orders'      => $today['total_orders'] ?? 0,
+                'total_revenue'     => $today['total_revenue'] ?? 0,
+                'cash_revenue'      => $today['cash_revenue'] ?? 0,
+                'transfer_revenue'  => $today['transfer_revenue'] ?? 0,
             ],
             'all_time' => [
                 'total_orders'      => $atCount,

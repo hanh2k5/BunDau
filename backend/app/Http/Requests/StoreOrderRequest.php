@@ -18,6 +18,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.product_id' => 'required|integer|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1|max:99',
             'note'               => 'nullable|string|max:500',
+            'payment_method'     => 'nullable|string|in:cash,transfer',
+            'table_number'       => 'nullable|string|max:20',
         ];
     }
 
@@ -33,6 +35,8 @@ class StoreOrderRequest extends FormRequest
             'items.*.quantity.min'      => 'Số lượng phải ít nhất là 1',
             'items.*.quantity.max'      => 'Số lượng tối đa là 99',
             'note.max'                  => 'Ghi chú tối đa 500 ký tự',
+            'payment_method.required'   => 'Vui lòng chọn phương thức thanh toán',
+            'payment_method.in'         => 'Phương thức thanh toán không hợp lệ',
         ];
     }
 }

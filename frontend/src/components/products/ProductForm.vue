@@ -146,16 +146,16 @@ function handleSubmit() {
         </div>
 
         <!-- Category -->
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-3">Phân loại *</label>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        <div class="col-span-full">
+          <label class="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Phân loại món ăn *</label>
+          <div class="flex flex-wrap gap-2">
             <label 
               v-for="cat in categories" 
               :key="cat.id"
-              class="relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer group hover:border-primary-200"
+              class="relative flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer group active:scale-95"
               :class="form.category === cat.id 
-                ? 'border-primary-500 bg-primary-50/50 ring-4 ring-primary-500/10' 
-                : 'border-slate-100 bg-white hover:bg-slate-50'"
+                ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm' 
+                : 'border-slate-100 bg-slate-50/50 text-slate-500 hover:bg-white hover:border-slate-200'"
             >
               <input 
                 type="radio" 
@@ -163,19 +163,13 @@ function handleSubmit() {
                 :value="cat.id" 
                 class="sr-only"
               />
-              <span class="text-xl mb-1 group-hover:scale-110 transition-transform">{{ cat.icon }}</span>
-              <span class="text-[10px] font-black uppercase tracking-widest text-center" :class="form.category === cat.id ? 'text-primary-700' : 'text-slate-500'">
+              <span class="text-base group-hover:scale-110 transition-transform">{{ cat.icon }}</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider leading-none">
                 {{ cat.label }}
               </span>
               
-              <!-- Checkmark for selected -->
-              <div v-if="form.category === cat.id" class="absolute top-1.5 right-1.5">
-                <div class="w-3.5 h-3.5 bg-primary-500 rounded-full flex items-center justify-center shadow-sm">
-                  <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
+              <!-- Selection indicator dot -->
+              <div v-if="form.category === cat.id" class="w-1 h-1 rounded-full bg-primary-500"></div>
             </label>
           </div>
         </div>

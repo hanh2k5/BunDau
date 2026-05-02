@@ -16,8 +16,11 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'daily_number',
+        'table_number',
         'total',
         'status',
+        'payment_method',
         'note',
         'paid_at',
     ];
@@ -33,6 +36,7 @@ class Order extends Model
             'total'   => 'decimal:0',
             'paid_at' => 'datetime',
             'status'  => OrderStatusEnum::class,
+            'payment_method' => \App\Enums\PaymentMethodEnum::class,
         ];
     }
 

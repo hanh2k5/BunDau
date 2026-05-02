@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
         return data
       } catch {
         this.logout()
-        throw new Error('Session expired')
+        throw new Error('Phiên đăng nhập đã hết hạn')
       }
     },
 

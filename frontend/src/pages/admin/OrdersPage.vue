@@ -16,11 +16,14 @@ import AppDateInput from '@/components/common/AppDateInput.vue'
 const route = useRoute()
 const router = useRouter()
 const ordersStore = useOrdersStore()
+const cart = useCartStore()
 const notification = useNotificationStore()
 
 const statusFilter = ref('')
-const dateFilter = ref(route.query.date || '')
+const paymentMethodFilter = ref('')
+const dateFilter = ref(route.query.date || new Date().toLocaleDateString('sv-SE'))
 const payingId = ref(null)
+const payModal = ref({ show: false, order: null })
 const cancellingId = ref(null)
 const selectedOrder = ref(null)
 
@@ -42,6 +45,7 @@ watch(() => route.query.date, (newDate) => {
 function loadOrders() {
   const params = {}
   if (statusFilter.value) params.status = statusFilter.value
+  if (paymentMethodFilter.value) params.payment_method = paymentMethodFilter.value
   if (dateFilter.value) params.date = dateFilter.value
   
   ordersStore.fetchOrders(params)
@@ -77,16 +81,32 @@ function handleSearch() {
   currentPage.value = 1
 }
 
-async function handlePay(order) {
+function handlePay(order) {
+  payModal.value = { show: true, order: order }
+}
+
+async function confirmPay(paymentMethod) {
+  const order = payModal.value.order
+  if (!order) return
+  
   payingId.value = order.id
+  payModal.value.show = false
+  
   try {
-    await ordersStore.payOrder(order.id)
+    await ordersStore.payOrder(order.id, paymentMethod)
     notification.success('Thanh toán thành công! 🎉')
+    loadOrders()
   } catch (err) {
     notification.error(err.response?.data?.message || 'Lỗi thanh toán')
   } finally {
     payingId.value = null
   }
+}
+
+function handleAddItems(order) {
+  cart.setEditingOrder(order)
+  notification.info(`Đang thêm món cho ${order.table_number || 'Bàn ' + order.daily_number}`)
+  router.push({ name: 'menu' })
 }
 
 
@@ -137,23 +157,45 @@ async function handleCancel(order) {
         </div>
 
         <!-- Status Filter Tabs -->
-        <div class="flex bg-slate-100/80 p-1 rounded-2xl w-full sm:w-auto overflow-x-auto no-scrollbar border border-slate-200/50 shadow-inner">
-          <button
-            v-for="status in [
-              { value: '', label: 'Tất cả' },
-              { value: 'pending', label: 'Chờ xử lý' },
-              { value: 'done', label: 'Đã xong' },
-              { value: 'cancelled', label: 'Đã hủy' },
-            ]"
-            :key="status.value"
-            @click="statusFilter = status.value; onFilterChange()"
-            class="px-4 py-1.5 text-[13px] font-bold rounded-xl transition-all duration-300 whitespace-nowrap"
-            :class="statusFilter === status.value 
-              ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50' 
-              : 'text-slate-500 hover:text-slate-800'"
-          >
-            {{ status.label }}
-          </button>
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <!-- Payment Method Filter -->
+          <div class="flex bg-slate-100/80 p-1 rounded-2xl overflow-x-auto no-scrollbar border border-slate-200/50 shadow-inner">
+            <button
+              v-for="method in [
+                { value: '', label: 'Tất cả' },
+                { value: 'cash', label: 'Tiền mặt' },
+                { value: 'transfer', label: 'CK' },
+              ]"
+              :key="method.value"
+              @click="paymentMethodFilter = method.value; onFilterChange()"
+              class="px-4 py-1.5 text-[12px] font-black rounded-xl transition-all duration-300 whitespace-nowrap uppercase tracking-tighter"
+              :class="paymentMethodFilter === method.value 
+                ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200/50' 
+                : 'text-slate-400 hover:text-slate-600'"
+            >
+              {{ method.label }}
+            </button>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="flex bg-slate-100/80 p-1 rounded-2xl overflow-x-auto no-scrollbar border border-slate-200/50 shadow-inner">
+            <button
+              v-for="status in [
+                { value: '', label: 'Tất cả' },
+                { value: 'pending', label: 'Chờ' },
+                { value: 'done', label: 'Xong' },
+                { value: 'cancelled', label: 'Huỷ' },
+              ]"
+              :key="status.value"
+              @click="statusFilter = status.value; onFilterChange()"
+              class="px-4 py-1.5 text-[12px] font-black rounded-xl transition-all duration-300 whitespace-nowrap uppercase tracking-tighter"
+              :class="statusFilter === status.value 
+                ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50' 
+                : 'text-slate-500 hover:text-slate-800'"
+            >
+              {{ status.label }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -171,7 +213,7 @@ async function handleCancel(order) {
           @input="handleSearch"
           type="text"
           class="input-apple !pl-11 !bg-slate-50/50 !border-none"
-          placeholder="Tìm theo tên nhân viên, ghi chú..."
+          placeholder="Tìm theo tên nhân viên..."
         />
       </div>
     </div>
@@ -200,6 +242,7 @@ async function handleCancel(order) {
           @pay="handlePay"
           @cancel="handleCancel"
           @view="selectedOrder = $event"
+          @add-items="handleAddItems"
         />
       </div>
 
@@ -228,8 +271,8 @@ async function handleCancel(order) {
           <!-- Row 1: ID & Status -->
           <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Mã đơn hàng</p>
-              <p class="font-black text-slate-900 text-xl tracking-tight">#{{ selectedOrder.id }}</p>
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Số thứ tự hôm nay</p>
+              <p class="font-black text-slate-900 text-xl tracking-tight">#{{ selectedOrder.daily_number || selectedOrder.id }}</p>
             </div>
             <div class="text-right">
               <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1">Trạng thái</p>
@@ -256,8 +299,13 @@ async function handleCancel(order) {
               </p>
             </div>
             <div class="sm:text-right">
-              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1.5">Thời điểm đặt</p>
-              <p class="font-bold text-slate-700 text-sm tracking-tight whitespace-nowrap">{{ formatDate(selectedOrder.created_at) }}</p>
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mb-1.5">Thanh toán</p>
+              <div class="flex items-center sm:justify-end gap-2">
+                <span class="text-sm">{{ selectedOrder.payment_method === 'transfer' ? '🏦' : '💰' }}</span>
+                <p class="font-bold text-slate-700 text-sm tracking-tight whitespace-nowrap">
+                  {{ selectedOrder.payment_method === 'transfer' ? 'Chuyển khoản' : 'Tiền mặt' }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -332,6 +380,67 @@ async function handleCancel(order) {
             </div>
           </div>
         </div>
+      </div>
+    </AppModal>
+
+    <!-- Payment Confirmation Modal -->
+    <AppModal
+      :show="payModal.show"
+      title="Xác nhận thanh toán"
+      size="sm"
+      @close="payModal.show = false"
+    >
+      <div v-if="payModal.order" class="space-y-6 pt-2">
+        <div class="text-center">
+          <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Tổng số tiền</p>
+          <p class="text-4xl font-black text-primary-600 tracking-tighter">
+            {{ formatCurrency(payModal.order.total) }}
+          </p>
+          <p class="text-[11px] font-bold text-slate-500 mt-2">
+            Đơn #{{ payModal.order.daily_number }} - {{ payModal.order.table_number || 'Mang về' }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3">
+          <button
+            @click="confirmPay('cash')"
+            class="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-3xl">💰</span>
+              <div class="text-left">
+                <p class="text-sm font-black text-slate-900 uppercase tracking-tight">Tiền mặt</p>
+                <p class="text-[10px] font-bold text-slate-500">Khách trả tiền tươi</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <button
+            @click="confirmPay('transfer')"
+            class="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 transition-all group"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-3xl">🏦</span>
+              <div class="text-left">
+                <p class="text-sm font-black text-slate-900 uppercase tracking-tight">Chuyển khoản</p>
+                <p class="text-[10px] font-bold text-slate-500">Quét mã QR ngân hàng</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <button
+          @click="payModal.show = false"
+          class="w-full py-3 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+        >
+          Để sau
+        </button>
       </div>
     </AppModal>
   </div>

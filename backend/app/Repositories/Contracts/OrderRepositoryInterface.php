@@ -22,12 +22,17 @@ interface OrderRepositoryInterface
     /**
      * Create an order with items in a transaction.
      */
-    public function createWithItems(int $userId, int $total, array $items, ?string $note = null): Order;
+    public function createWithItems(int $userId, int $total, array $items, ?string $note = null, string $paymentMethod = 'cash', ?string $tableNumber = null): Order;
+
+    /**
+     * Add items to an existing order.
+     */
+    public function addItemsToOrder(Order $order, array $items): Order;
 
     /**
      * Update order status.
      */
-    public function updateStatus(Order $order, OrderStatusEnum $status, ?\DateTimeInterface $paidAt = null): Order;
+    public function updateStatus(Order $order, OrderStatusEnum $status, ?\DateTimeInterface $paidAt = null, array $additionalData = []): Order;
 
     /**
      * Delete an order.

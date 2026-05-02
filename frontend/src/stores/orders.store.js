@@ -30,8 +30,17 @@ export const useOrdersStore = defineStore('orders', {
       return data
     },
 
-    async payOrder(id) {
-      const { data } = await ordersApi.pay(id)
+    async payOrder(id, paymentMethod = 'cash') {
+      const { data } = await ordersApi.pay(id, paymentMethod)
+      const index = this.orders.findIndex((o) => o.id === id)
+      if (index !== -1) {
+        this.orders[index] = data.data
+      }
+      return data
+    },
+
+    async addItemsToOrder(id, payload) {
+      const { data } = await ordersApi.addItems(id, payload)
       const index = this.orders.findIndex((o) => o.id === id)
       if (index !== -1) {
         this.orders[index] = data.data

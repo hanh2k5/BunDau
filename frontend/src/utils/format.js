@@ -32,6 +32,19 @@ export function formatDate(dateStr) {
 }
 
 /**
+ * Format only time (HH:mm).
+ * @param {string} dateStr
+ * @returns {string}
+ */
+export function formatTime(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const hh = String(date.getHours()).padStart(2, '0')
+  const mm = String(date.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+/**
  * Format a short date (DD/MM/YYYY).
  * @param {string} dateStr
  * @returns {string}

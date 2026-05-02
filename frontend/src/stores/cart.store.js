@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 export const useCartStore = defineStore('cart', {
   state: () => ({
     items: [],
+    activeOrderId: null,
+    tableNumber: '',
   }),
 
   getters: {
@@ -69,6 +71,8 @@ export const useCartStore = defineStore('cart', {
 
     clear() {
       this.items = []
+      this.activeOrderId = null
+      this.tableNumber = ''
     },
 
     setItems(items) {
@@ -84,14 +88,23 @@ export const useCartStore = defineStore('cart', {
     /**
      * Format items for API submission.
      */
-    toApiPayload(note = null) {
+    toApiPayload(note = null, payment_method = 'cash', table_number = null) {
       return {
         items: this.items.map((item) => ({
           product_id: item.product_id,
           quantity: item.quantity,
         })),
         note,
+        payment_method,
+        table_number,
       }
+    },
+
+    setEditingOrder(order) {
+      this.activeOrderId = order.id
+      this.tableNumber = order.table_number || ''
+      this.items = [] // Clear items to start fresh add-on, OR keep?
+      // Usually for "add items", we start with empty cart and append.
     },
   },
 

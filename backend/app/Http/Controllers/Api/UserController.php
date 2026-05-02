@@ -72,7 +72,7 @@ class UserController extends Controller
             'name.required' => 'Tên hiển thị không được để trống.',
             'email.required' => 'Tên đăng nhập (Email) không được để trống.',
             'email.unique' => 'Tên đăng nhập này đã có người sử dụng.',
-            'password.min' => 'Mật khẩu phải dài ít nhất 6 ký tự.',
+            'password.min' => 'Mật khẩu phải dài ít nhất 4 ký tự.',
         ];
 
         $validated = $request->validate([

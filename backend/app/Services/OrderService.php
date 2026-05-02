@@ -86,7 +86,9 @@ class OrderService
             $user->id,
             $total,
             $items->toArray(),
-            $data['note'] ?? null
+            $data['note'] ?? null,
+            $data['payment_method'] ?? 'cash',
+            $data['table_number'] ?? null
         );
     }
 
@@ -95,9 +97,9 @@ class OrderService
      *
      * @throws OrderAlreadyProcessedException
      */
-    public function pay(Order $order): Order
+    public function pay(Order $order, string $paymentMethod = 'cash'): Order
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $paymentMethod) {
             // Re-fetch from DB to get the most recent status (for 2-tab scenarios)
             $order = $order->fresh();
 
@@ -109,7 +111,40 @@ class OrderService
                 throw new OrderAlreadyProcessedException($msg);
             }
 
-            return $this->repo->updateStatus($order, OrderStatusEnum::DONE, now());
+            return $this->repo->updateStatus($order, OrderStatusEnum::DONE, now(), [
+                'payment_method' => $paymentMethod,
+            ]);
+        });
+    }
+
+    /**
+     * Add items to an existing order.
+     */
+    public function addItems(Order $order, array $data): Order
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $data) {
+            $order = $order->fresh();
+
+            if ($order->status !== OrderStatusEnum::PENDING) {
+                throw new OrderAlreadyProcessedException('Chỉ có thể thêm món vào đơn hàng đang chờ xử lý');
+            }
+
+            $productIds = collect($data['items'])->pluck('product_id');
+            $products   = Product::whereIn('id', $productIds)
+                                 ->where('is_available', true)
+                                 ->get();
+
+            if ($products->count() !== $productIds->unique()->count()) {
+                throw new ProductNotAvailableException('Một số món không còn phục vụ');
+            }
+
+            $items = collect($data['items'])->map(fn ($item) => [
+                'product_id' => $item['product_id'],
+                'quantity'   => $item['quantity'],
+                'price'      => (int) $products->find($item['product_id'])->price,
+            ]);
+
+            return $this->repo->addItemsToOrder($order, $items->toArray());
         });
     }
 
